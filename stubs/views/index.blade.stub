@@ -1,0 +1,153 @@
+@extends("la.layouts.app")
+
+@section("contentheader_title", "__module_name_2__")
+@section("contentheader_description", "__module_name_2__ listing")
+@section("section", "__module_name_2__")
+@section("sub_section", "Listing")
+@section("htmlheader_title", "__module_name_2__ Listing")
+
+@section("headerElems")
+@la_access("__module_name__", "create")
+	<button class="btn btn-success btn-sm pull-right" data-toggle="modal" data-target="#AddModal">Add __singular_cap_var__</button>
+@endla_access
+@endsection
+
+@section("main-content")
+
+@if (count($errors) > 0)
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="box box-success">
+	<!--<div class="box-header"></div>-->
+	<div class="box-body">
+		<table id="example1" class="table table-bordered" style="    max-height: 400px;
+    height: 400px;">
+		<thead>
+		<tr>
+        <td colspan='9'>
+               
+                <label>From Date:&nbsp;&nbsp;</label><input name="min" id="min" type="search" value="<?php echo date('Y-m-d 0:0'); ?>">&nbsp;&nbsp;
+				<label>To Date:&nbsp;&nbsp;</label><input name="max" id="max" type="search" value="<?php echo date('Y-m-d 23:59'); ?>">&nbsp;&nbsp;
+                <input type="button" value="Clear Date" id="clear" >&nbsp;&nbsp;
+                
+        </td>
+ </tr>
+		<tr class="success">
+			@foreach( $listing_cols as $col )
+			<th>{{ $module->fields[$col]['label'] or ucfirst($col) }}</th>
+			@endforeach
+			@if($show_actions)
+			<th>Actions</th>
+			@endif
+		</tr>
+		</thead>
+		<tbody>
+			
+		</tbody>
+		</table>
+	</div>
+</div>
+
+@la_access("__module_name__", "create")
+<div class="modal fade" id="AddModal" role="dialog" aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="myModalLabel">Add __singular_cap_var__</h4>
+			</div>
+			{!! Form::open(['action' => 'LA\__controller_class_name__@store', 'id' => '__singular_var__-add-form']) !!}
+			<div class="modal-body">
+				<div class="box-body">
+                    @la_form($module)
+					
+					{{--
+					__input_fields__
+					--}}
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				{!! Form::submit( 'Submit', ['class'=>'btn btn-success']) !!}
+			</div>
+			{!! Form::close() !!}
+		</div>
+	</div>
+</div>
+@endla_access
+
+@endsection
+
+@push('styles')
+<link rel="stylesheet" type="text/css" href="{{ asset('la-assets/plugins/datatables/datatables.min.css') }}"/>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+<link rel="stylesheet" href="{{ asset('la-assets/plugins/datetimepicker/bootstrap-datetimepicker.min.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ asset('la-assets/plugins/Fullscreen-Zoom/Fullscreen-Zoom/Fullscreen-Zoom/src/css/jquery.pan.css') }}"/>
+@endpush
+
+@push('scripts')
+<script src="{{ asset('la-assets/plugins/daterangepicker/daterangepicker.js') }}"></script>
+<script src="{{ asset('la-assets/plugins/datetimepicker/bootstrap-datetimepicker.js') }}"></script>
+<script src="{{ asset('la-assets/plugins/datatables/datatables.min.js') }}"></script>
+<script src="{{ asset('la-assets/plugins/Fullscreen-Zoom/Fullscreen-Zoom/Fullscreen-Zoom/src/js/jquery.pan.js') }}"></script>
+<script>
+$(document).ready(function(){
+            $.fn.dataTable.ext.search.push(
+        function (settings, data, dataIndex) {
+            var min = $('#min').datetimepicker();
+            var max = $('#max').datetimepicker();
+            var startDate = new Date(data[4]);
+            if (min == null && max == null) { return true; }
+            if (min == null && startDate <= max) { return true;}
+            if(max == null && startDate >= min) {return true;}
+            if (startDate <= max && startDate >= min) { return true; }
+            return false;
+        }
+        );
+        $("#min").datetimepicker(
+            { format: 'YYYY-MM-DD H:m' }).on('dp.change', function (e) { console.log($('#min').datetimepicker().val());table.draw(); });
+                    $("#max").datetimepicker(
+            { format: 'YYYY-MM-DD H:m' }).on('dp.change', function (e) { table.draw(); });
+                    $('#dropdown').change(function(){
+                      table.draw();
+                    });
+			var table = $('#example1').DataTable( {
+                                "select": true,
+								"processing": true,
+								"serverSide": true,
+                                //"dom": '<"top"if><"bottom"tlpr><"clear">',
+								"ajax": {
+									"url": "{{env('APP_URL1')}}./admin/__singular_var___dt_ajax",
+									"data": function ( d ) {
+										if($('#min').datetimepicker().val()!='' && $('#max').datetimepicker().val()!=''){
+                                                                                d.mindate = $('#min').datetimepicker().val();
+                                                                                d.maxdate = $('#max').datetimepicker().val();
+                                                                            }
+                                  }
+								}
+							} );
+     table.column(0).visible(false);
+ });
+ <!-- function for image zoom functionality -->
+function fullimage(){
+ $(document).ready(function(){
+		$(".pan").pan();
+	});
+}
+
+<!-- clear data selection for input fields -->
+$('#clear').on('click', function() {
+    $('#min').val(null).trigger("change");
+    $('#max').val(null).trigger("change");
+    
+});
+</script>
+
+@endpush
